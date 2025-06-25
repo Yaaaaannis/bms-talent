@@ -15,7 +15,7 @@ const Navbar = () => {
           </div>
 
           {/* Navigation Links - Center */}
-          <div className="flex items-center justify-center space-x-8 flex-1">
+          <div className="flex items-center justify-center space-x-8 flex-1 uppercase font-bold">
             <Link
               href="/"
               className="text-black hover:text-gray-900 px-3 py-2 rounded-lg text-[22px] font-extrabold transition-colors duration-200 hover:bg-gray-100"
