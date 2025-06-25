@@ -9,13 +9,15 @@ import { useFrame, extend } from '@react-three/fiber'
 import * as THREE from 'three'
 
 // Déclaration TypeScript pour le shader personnalisé
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      waveShaderMaterial: THREE.ShaderMaterial;
+      simpleColorMaterial: object
     }
   }
 }
+/* eslint-enable @typescript-eslint/no-namespace */
 
 // Contexte pour partager les états de hover
 interface HoverContextType {
@@ -32,23 +34,6 @@ const HoverContext = createContext<HoverContextType>({
 
 export const useHover = () => useContext(HoverContext);
 
-// Fonction pour calculer la couleur complémentaire
-const getComplementaryColor = (hexColor: string): string => {
-  // Convertir hex en RGB
-  const hex = hexColor.replace('#', '');
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-  
-  // Calculer la couleur complémentaire
-  const compR = 255 - r;
-  const compG = 255 - g;
-  const compB = 255 - b;
-  
-  // Convertir back en hex
-  return `#${compR.toString(16).padStart(2, '0')}${compG.toString(16).padStart(2, '0')}${compB.toString(16).padStart(2, '0')}`;
-};
-
 export const HoverProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [hoveredCard, setHoveredCard] = useState<{ id: string; color: string; bounds: DOMRect | null } | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -57,7 +42,7 @@ export const HoverProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({
         x: e.clientX / window.innerWidth,
-        y: 1.0 - (e.clientY / window.innerHeight) // Inverser Y pour correspondre aux coordonnées shader
+        y: e.clientY / window.innerHeight
       });
     };
 
@@ -72,28 +57,22 @@ export const HoverProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
-// Shader material custom pour l'effet wave
-const WaveShaderMaterial = shaderMaterial(
+// Shader material simplifié pour changement de couleur qui suit la souris
+const SimpleColorMaterial = shaderMaterial(
   {
-    time: 0,
-    hoveredColor: new THREE.Color('#ffffff'),
     hoveredBounds: new THREE.Vector4(0, 0, 0, 0), // x, y, width, height en coordonnées NDC
     mousePosition: new THREE.Vector2(0, 0),
     isHovered: false,
-    waveIntensity: 0.0,
-    resolution: new THREE.Vector2(typeof window !== 'undefined' ? window.innerWidth : 1920, typeof window !== 'undefined' ? window.innerHeight : 1080),
+    hoverColor: new THREE.Color('#ff0000'), // Rouge dur
+    hoverRadius: 0.15, // Rayon autour de la souris
     // Propriétés du matériau de base
     color: new THREE.Color('#ffffff'),
     metalness: 0.1,
     roughness: 0.05,
     transmission: 0.8,
     opacity: 0.7,
-    thickness: 0.5,
     emissive: new THREE.Color('#ffffff'),
     emissiveIntensity: 0.3,
-    clearcoat: 1.0,
-    clearcoatRoughness: 0.1,
-    ior: 1.5,
   },
   // Vertex shader
   `
@@ -114,27 +93,21 @@ const WaveShaderMaterial = shaderMaterial(
       gl_Position = screenPosition;
     }
   `,
-  // Fragment shader
+  // Fragment shader avec effet qui suit la souris
   `
-    uniform float time;
-    uniform vec3 hoveredColor;
     uniform vec4 hoveredBounds;
     uniform vec2 mousePosition;
     uniform bool isHovered;
-    uniform float waveIntensity;
-    uniform vec2 resolution;
+    uniform vec3 hoverColor;
+    uniform float hoverRadius;
     
     uniform vec3 color;
     uniform float metalness;
     uniform float roughness;
     uniform float transmission;
     uniform float opacity;
-    uniform float thickness;
     uniform vec3 emissive;
     uniform float emissiveIntensity;
-    uniform float clearcoat;
-    uniform float clearcoatRoughness;
-    uniform float ior;
     
     varying vec3 vPosition;
     varying vec3 vNormal;
@@ -158,21 +131,19 @@ const WaveShaderMaterial = shaderMaterial(
                        screenUV.y <= hoveredBounds.y + hoveredBounds.w;
         
         if (inBounds) {
-          // Calculer la distance de la position de la souris (au lieu du centre)
+          // Calculer la distance de la position de la souris
           float distFromMouse = length(screenUV - mousePosition);
           
-          // Créer une wave qui se propage de la position de la souris
-          float wave = sin(distFromMouse * 30.0 - time * 12.0) * 0.5 + 0.5;
-          wave *= waveIntensity;
-          
-          // Atténuer l'effet selon la distance de la souris
-          float distanceAttenuation = 1.0 - smoothstep(0.0, 0.3, distFromMouse);
-          wave *= distanceAttenuation;
-          
-          // Appliquer la couleur complémentaire avec l'effet wave
-          finalColor = mix(color, hoveredColor, wave * 0.9);
-          finalEmissive = mix(emissive, hoveredColor, wave * 1.2);
-          finalEmissiveIntensity = mix(emissiveIntensity, 1.5, wave * 0.7);
+          // Appliquer l'effet rouge dans un rayon autour de la souris
+          if (distFromMouse < hoverRadius) {
+            // Créer un dégradé doux vers les bords
+            float intensity = 1.0 - smoothstep(0.0, hoverRadius, distFromMouse);
+            
+            // Appliquer la couleur rouge dur avec l'intensité
+            finalColor = mix(color, hoverColor, intensity);
+            finalEmissive = mix(emissive, hoverColor, intensity);
+            finalEmissiveIntensity = mix(emissiveIntensity, 1.0, intensity);
+          }
         }
       }
       
@@ -181,14 +152,14 @@ const WaveShaderMaterial = shaderMaterial(
       float fresnel = pow(1.0 - dot(normal, vec3(0.0, 0.0, 1.0)), 2.0);
       
       vec3 result = finalColor + finalEmissive * finalEmissiveIntensity;
-      result = mix(result, finalColor * 1.5, fresnel * 0.3);
+      result = mix(result, finalColor * 1.2, fresnel * 0.3);
       
       gl_FragColor = vec4(result, opacity + transmission * 0.1);
     }
   `
 );
 
-extend({ WaveShaderMaterial });
+extend({ SimpleColorMaterial });
 
 interface ModelProps {
   position?: [number, number, number];
@@ -215,15 +186,11 @@ export function BmsModel(props: ModelProps) {
     }
     
     if (materialRef.current && materialRef.current.uniforms) {
-      materialRef.current.uniforms.time.value = time;
+      // Toujours mettre à jour la position de la souris
       materialRef.current.uniforms.mousePosition.value = new THREE.Vector2(mousePosition.x, mousePosition.y);
       
       if (hoveredCard && hoveredCard.bounds) {
         materialRef.current.uniforms.isHovered.value = true;
-        
-        // Utiliser la couleur complémentaire
-        const complementaryColor = getComplementaryColor(hoveredCard.color);
-        materialRef.current.uniforms.hoveredColor.value = new THREE.Color(complementaryColor);
         
         // Convertir les bounds DOM en coordonnées NDC
         const bounds = hoveredCard.bounds;
@@ -233,12 +200,8 @@ export function BmsModel(props: ModelProps) {
         const height = bounds.height / window.innerHeight;
         
         materialRef.current.uniforms.hoveredBounds.value = new THREE.Vector4(x, y, width, height);
-        materialRef.current.uniforms.waveIntensity.value = Math.min(time * 2.0, 1.0); // Animation d'entrée
       } else {
         materialRef.current.uniforms.isHovered.value = false;
-        if (materialRef.current.uniforms.waveIntensity.value > 0) {
-          materialRef.current.uniforms.waveIntensity.value = Math.max(materialRef.current.uniforms.waveIntensity.value - 0.05, 0.0); // Animation de sortie
-        }
       }
     }
   })
@@ -253,8 +216,9 @@ export function BmsModel(props: ModelProps) {
         rotation={[Math.PI / 2, 0, 0]}
         scale={0.203}
       >
-        <waveShaderMaterial
+        <primitive
           ref={materialRef}
+          object={new SimpleColorMaterial()}
           transparent={true}
           side={THREE.DoubleSide}
         />
