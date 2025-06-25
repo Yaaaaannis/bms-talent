@@ -38,7 +38,7 @@ const BentoGrid = () => {
         {/* Grande case à gauche */}
         <div 
           ref={cardRefs.main}
-          className="col-span-6 row-span-8 rounded-2xl backdrop-blur-lg border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-hidden group hover:backdrop-blur-xl"
+          className="col-span-6 row-span-8 rounded-2xl border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-hidden group"
           style={{
             background: `linear-gradient(135deg, ${colors.primary}30, ${colors.primary}50)`,
             boxShadow: '0 0 30px rgba(79, 209, 199, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1)'
@@ -60,7 +60,7 @@ const BentoGrid = () => {
         {/* Petite case 1 - Haut gauche */}
         <div 
           ref={cardRefs.filming}
-          className="col-span-3 row-span-4 rounded-2xl backdrop-blur-lg border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group hover:backdrop-blur-xl"
+          className="col-span-3 row-span-4 rounded-2xl border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
           style={{
             background: `linear-gradient(135deg, ${colors.secondary}30, ${colors.secondary}50)`,
             boxShadow: '0 0 20px rgba(89, 205, 144, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.1)'
@@ -78,7 +78,7 @@ const BentoGrid = () => {
         {/* Petite case 2 - Haut droite */}
         <div 
           ref={cardRefs.music}
-          className="col-span-3 row-span-4 rounded-2xl backdrop-blur-lg border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group hover:backdrop-blur-xl"
+          className="col-span-3 row-span-4 rounded-2xl border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
           style={{
             background: `linear-gradient(135deg, ${colors.tertiary}30, ${colors.tertiary}50)`,
             boxShadow: '0 0 20px rgba(63, 167, 214, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.1)'
@@ -96,7 +96,7 @@ const BentoGrid = () => {
         {/* Petite case 3 - Bas gauche */}
         <div 
           ref={cardRefs.art}
-          className="col-span-3 row-span-4 rounded-2xl backdrop-blur-lg border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group hover:backdrop-blur-xl"
+          className="col-span-3 row-span-4 rounded-2xl border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
           style={{
             background: `linear-gradient(135deg, ${colors.quaternary}30, ${colors.quaternary}50)`,
             boxShadow: '0 0 20px rgba(250, 192, 94, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.1)'
@@ -114,7 +114,7 @@ const BentoGrid = () => {
         {/* Petite case 4 - Bas droite */}
         <div 
           ref={cardRefs.writing}
-          className="col-span-3 row-span-4 rounded-2xl backdrop-blur-lg border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group hover:backdrop-blur-xl"
+          className="col-span-3 row-span-4 rounded-2xl border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
           style={{
             background: `linear-gradient(135deg, ${colors.quinary}30, ${colors.quinary}50)`,
             boxShadow: '0 0 20px rgba(247, 157, 132, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.1)'

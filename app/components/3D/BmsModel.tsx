@@ -63,8 +63,10 @@ const SimpleColorMaterial = shaderMaterial(
     hoveredBounds: new THREE.Vector4(0, 0, 0, 0), // x, y, width, height en coordonnées NDC
     mousePosition: new THREE.Vector2(0, 0),
     isHovered: false,
-    hoverColor: new THREE.Color('#ff0000'), // Rouge dur
+    hoverColor: new THREE.Color('#ff0000'), // Couleur dynamique selon la case
     hoverRadius: 0.15, // Rayon autour de la souris
+    emissionBoost: 1.0, // Multiplicateur d'émission selon la case
+    makeTransparent: false, // Effet de transparence totale
     // Propriétés du matériau de base
     color: new THREE.Color('#ffffff'),
     metalness: 0.1,
@@ -93,13 +95,15 @@ const SimpleColorMaterial = shaderMaterial(
       gl_Position = screenPosition;
     }
   `,
-  // Fragment shader avec effet qui suit la souris
+  // Fragment shader avec couleurs différentes par case et transparence
   `
     uniform vec4 hoveredBounds;
     uniform vec2 mousePosition;
     uniform bool isHovered;
     uniform vec3 hoverColor;
     uniform float hoverRadius;
+    uniform float emissionBoost;
+    uniform bool makeTransparent;
     
     uniform vec3 color;
     uniform float metalness;
@@ -122,6 +126,7 @@ const SimpleColorMaterial = shaderMaterial(
       vec3 finalColor = color;
       vec3 finalEmissive = emissive;
       float finalEmissiveIntensity = emissiveIntensity;
+      float finalOpacity = opacity;
       
       if (isHovered) {
         // Vérifier si le fragment est dans les bounds de la case survolée
@@ -134,27 +139,36 @@ const SimpleColorMaterial = shaderMaterial(
           // Calculer la distance de la position de la souris
           float distFromMouse = length(screenUV - mousePosition);
           
-          // Appliquer l'effet rouge dans un rayon autour de la souris
+          // Appliquer l'effet dans un rayon autour de la souris
           if (distFromMouse < hoverRadius) {
             // Créer un dégradé doux vers les bords
             float intensity = 1.0 - smoothstep(0.0, hoverRadius, distFromMouse);
             
-            // Appliquer la couleur rouge dur avec l'intensité
-            finalColor = mix(color, hoverColor, intensity);
-            finalEmissive = mix(emissive, hoverColor, intensity);
-            finalEmissiveIntensity = mix(emissiveIntensity, 1.0, intensity);
+            // Effet de transparence totale si activé (suit la souris)
+            if (makeTransparent) {
+              finalOpacity = mix(opacity, 0.0, intensity);
+              finalColor = mix(color, vec3(0.0), intensity);
+              finalEmissive = mix(emissive, hoverColor, intensity);
+              finalEmissiveIntensity = mix(emissiveIntensity, emissionBoost * 0.5, intensity);
+            } else {
+              // Appliquer la couleur spécifique à la case avec intensité variable
+              finalColor = mix(color, hoverColor, intensity * 0.8);
+              finalEmissive = mix(emissive, hoverColor, intensity);
+              finalEmissiveIntensity = mix(emissiveIntensity, emissionBoost, intensity * 0.7);
+            }
           }
         }
       }
       
-      // Simuler un matériau physique simple
+      // Simuler un matériau physique avec effet métallique variable
       vec3 normal = normalize(vNormal);
       float fresnel = pow(1.0 - dot(normal, vec3(0.0, 0.0, 1.0)), 2.0);
       
+      // Ajouter des reflets selon la couleur
       vec3 result = finalColor + finalEmissive * finalEmissiveIntensity;
-      result = mix(result, finalColor * 1.2, fresnel * 0.3);
+      result = mix(result, finalColor * (1.2 + emissionBoost * 0.3), fresnel * 0.3);
       
-      gl_FragColor = vec4(result, opacity + transmission * 0.1);
+      gl_FragColor = vec4(result, finalOpacity + transmission * 0.1);
     }
   `
 );
@@ -177,6 +191,54 @@ export function BmsModel(props: ModelProps) {
   const materialRef = useRef<THREE.ShaderMaterial>(null!)
   const { hoveredCard, mousePosition } = useHover();
   
+  // Fonction pour obtenir les propriétés spécifiques à chaque case
+  const getCardProperties = (cardId: string, color: string) => {
+    switch (cardId) {
+      case 'main': // Rouge - EXPLORE 500+ MASTERCLASSES
+        return {
+          hoverColor: new THREE.Color(color).multiplyScalar(1.2), // Rouge intense
+          emissionBoost: 2.0,
+          hoverRadius: 0.18,
+          makeTransparent: false
+        };
+      case 'filming': // Vert - FILMING
+        return {
+          hoverColor: new THREE.Color(color).multiplyScalar(1.5), // Vert brillant
+          emissionBoost: 1.8,
+          hoverRadius: 0.15,
+          makeTransparent: false
+        };
+      case 'music': // Bleu - MUSIC  
+        return {
+          hoverColor: new THREE.Color(color).multiplyScalar(1.3), // Bleu électrique
+          emissionBoost: 2.2,
+          hoverRadius: 0.16,
+          makeTransparent: false
+        };
+      case 'art': // Jaune - ART 🎨 EFFET SPÉCIAL : TRANSPARENCE TOTALE
+        return {
+          hoverColor: new THREE.Color(color).multiplyScalar(1.4), // Jaune doré
+          emissionBoost: 3.0, // Émission plus forte pour l'effet fantôme
+          hoverRadius: 0.17,
+          makeTransparent: true // ✨ TRANSPARENCE TOTALE
+        };
+      case 'writing': // Orange - WRITING
+        return {
+          hoverColor: new THREE.Color(color).multiplyScalar(1.3), // Orange vibrant
+          emissionBoost: 1.9,
+          hoverRadius: 0.14,
+          makeTransparent: false
+        };
+      default:
+        return {
+          hoverColor: new THREE.Color('#ff0000'),
+          emissionBoost: 1.0,
+          hoverRadius: 0.15,
+          makeTransparent: false
+        };
+    }
+  };
+  
   useFrame((state) => {
     const time = state.clock.getElapsedTime()
     if (meshRef.current) {        
@@ -191,6 +253,14 @@ export function BmsModel(props: ModelProps) {
       
       if (hoveredCard && hoveredCard.bounds) {
         materialRef.current.uniforms.isHovered.value = true;
+        
+        // Obtenir les propriétés spécifiques à la case
+        const cardProps = getCardProperties(hoveredCard.id, hoveredCard.color);
+        
+        materialRef.current.uniforms.hoverColor.value = cardProps.hoverColor;
+        materialRef.current.uniforms.emissionBoost.value = cardProps.emissionBoost;
+        materialRef.current.uniforms.hoverRadius.value = cardProps.hoverRadius;
+        materialRef.current.uniforms.makeTransparent.value = cardProps.makeTransparent;
         
         // Convertir les bounds DOM en coordonnées NDC
         const bounds = hoveredCard.bounds;
