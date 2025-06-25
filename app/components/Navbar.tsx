@@ -3,7 +3,7 @@ import Link from 'next/link'
 const Navbar = () => {
   return (
     <nav className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
-      <div className="w-4/5 bg-white/90 backdrop-blur-md border border-gray-200 shadow-lg rounded-2xl">
+      <div className="w-[95%] bg-white/90 backdrop-blur-md border border-gray-200 shadow-lg rounded-3xl">
         <div className="flex items-center h-16 px-6">
           {/* Logo - Left side */}
           <div className="flex items-center space-x-2 flex-1">
@@ -18,21 +18,21 @@ const Navbar = () => {
           <div className="flex items-center justify-center space-x-8 flex-1">
             <Link
               href="/"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-lg text-sm font-extrabold transition-colors duration-200 hover:bg-gray-100"
+              className="text-black hover:text-gray-900 px-3 py-2 rounded-lg text-[22px] font-extrabold transition-colors duration-200 hover:bg-gray-100"
               style={{ fontFamily: "'PPFormula', sans-serif" }}
             >
               Projets
             </Link>
             <Link
               href="/services"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-lg text-sm font-extrabold transition-colors duration-200 hover:bg-gray-100"
+              className="text-black hover:text-gray-900 px-3 py-2 rounded-lg text-[22px] font-extrabold transition-colors duration-200 hover:bg-gray-100"
               style={{ fontFamily: "'PPFormula', sans-serif" }}
             >
               What
             </Link>
             <Link
               href="/contact"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-lg text-sm font-extrabold transition-colors duration-200 hover:bg-gray-100"
+              className="text-black hover:text-gray-900 px-3 py-2 rounded-lg text-[22px] font-extrabold transition-colors duration-200 hover:bg-gray-100"
               style={{ fontFamily: "'PPFormula', sans-serif" }}
             >
               Contact
