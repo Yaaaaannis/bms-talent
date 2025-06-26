@@ -19,9 +19,9 @@ export interface CardContent {
 export const cardsData: Record<string, CardContent> = {
   main: {
     id: 'main',
-    title: 'EXPLORE 500+',
-    subtitle: 'MASTERCLASSES',
-    description: 'AND GAIN NEW SKILLS',
+    title: 'DÉVELOPPEMENT',
+    subtitle: 'WEB',
+    description: 'CRÉATION DE SITE, APP & AUTRES',
     expandedContent: {
       sections: [
         {
@@ -67,9 +67,9 @@ export const cardsData: Record<string, CardContent> = {
   
   filming: {
     id: 'filming',
-    title: 'FILMING',
-    subtitle: 'COURSES',
-    description: 'Apprenez les techniques de réalisation avec des professionnels du cinéma et de la télévision.',
+    title: 'PHOTO & VIDEO',
+    subtitle: 'CLIPS, COURTS METRAGES, LONG METRAGES, ETC.',
+    description: 'APPRENDRE À PHOTOSHOP, ILLUSTRATOR, AFTER EFFECTS, PHOTOMONTAGE, ETC.',
     categories: [
       {
         title: 'Direction d&apos;acteurs',
@@ -88,9 +88,9 @@ export const cardsData: Record<string, CardContent> = {
 
   music: {
     id: 'music',
-    title: 'MUSIC',
-    subtitle: 'COURSES',
-    description: 'Maîtrisez votre instrument et développez votre créativité musicale.',
+    title: 'GRAPHIC DESIGN',
+    subtitle: 'WEB DESIGN, UI/UX, ILLUSTRATION, PHOTOMONTAGE, ETC.',
+    description: 'APPRENDRE À PHOTOSHOP, ILLUSTRATOR, AFTER EFFECTS, PHOTOMONTAGE, ETC.',
     categories: [
       {
         title: 'Composition',
@@ -109,9 +109,9 @@ export const cardsData: Record<string, CardContent> = {
 
   art: {
     id: 'art',
-    title: 'ART',
-    subtitle: 'COURSES',
-    description: 'Explorez différentes techniques artistiques et développez votre style unique.',
+    title: 'COMMUNITY MANAGEMENT',
+    subtitle: 'SOCIAL MEDIA, EMAIL MARKETING, ETC.',
+    description: 'APPRENDRE À GÉRER UNE COMMUNAUTÉ, À FAIRE DES PUBLICITÉS, À FAIRE DES EMAIL MARKETING, ETC.',
     categories: [
       {
         title: 'Peinture & Dessin',
@@ -130,9 +130,9 @@ export const cardsData: Record<string, CardContent> = {
 
   writing: {
     id: 'writing',
-    title: 'WRITING',
-    subtitle: 'COURSES',
-    description: 'Affinez votre plume et apprenez les secrets de l&apos;écriture créative.',
+    title: 'DIRECTION ARTISTIQUE',
+    subtitle: 'CREATION IMAGE DE MARQUE, PUBLICITÉS, ETC.',
+    description: 'APPRENDRE À DIRE DES SCÈNES, À FAIRE DES PUBLICITÉS, À FAIRE DES EMAIL MARKETING, ETC.',
     categories: [
       {
         title: 'Écriture créative',

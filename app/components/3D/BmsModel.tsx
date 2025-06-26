@@ -66,14 +66,14 @@ const SimpleColorMaterial = shaderMaterial(
     hoverColor: new THREE.Color('#ff0000'), // Couleur dynamique selon la case
     hoverRadius: 0.15, // Rayon autour de la souris
     emissionBoost: 1.0, // Multiplicateur d'émission selon la case
-    // Propriétés du matériau de base
-    color: new THREE.Color('#ffffff'),
-    metalness: 0.1,
-    roughness: 0.05,
-    transmission: 0.8,
-    opacity: 0.7,
-    emissive: new THREE.Color('#ffffff'),
-    emissiveIntensity: 0.3,
+    // Propriétés du matériau de base - Aspect métallique sombre
+    color: new THREE.Color('#2a2a2a'), // Gris foncé métallique
+    metalness: 0.9, // Très métallique
+    roughness: 0.2, // Légèrement rugueux pour l'effet brossé
+    transmission: 0.0, // Pas de transmission pour un aspect solide
+    opacity: 1.0, // Complètement opaque
+    emissive: new THREE.Color('#1a1a1a'), // Émission très subtile
+    emissiveIntensity: 0.1,
   },
   // Vertex shader
   `
@@ -81,6 +81,8 @@ const SimpleColorMaterial = shaderMaterial(
     varying vec3 vNormal;
     varying vec2 vUv;
     varying vec4 vScreenPosition;
+    varying vec3 vWorldPosition;
+    varying vec3 vWorldNormal;
     
     void main() {
       vPosition = position;
@@ -88,13 +90,16 @@ const SimpleColorMaterial = shaderMaterial(
       vUv = uv;
       
       vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+      vWorldPosition = worldPosition.xyz;
+      vWorldNormal = normalize(normalMatrix * normal);
+      
       vec4 screenPosition = projectionMatrix * viewMatrix * worldPosition;
       vScreenPosition = screenPosition;
       
       gl_Position = screenPosition;
     }
   `,
-  // Fragment shader avec couleurs différentes par case
+  // Fragment shader pour effet wireframe/contour lumineux
   `
     uniform vec4 hoveredBounds;
     uniform vec2 mousePosition;
@@ -115,49 +120,96 @@ const SimpleColorMaterial = shaderMaterial(
     varying vec3 vNormal;
     varying vec2 vUv;
     varying vec4 vScreenPosition;
+    varying vec3 vWorldPosition;
+    varying vec3 vWorldNormal;
+    
+    // Éclairage simple pour simuler les lumières de la scène
+    vec3 calculateLighting(vec3 worldPos, vec3 worldNormal) {
+      vec3 lighting = vec3(0.0);
+      
+      // Lumière ambiante
+      lighting += vec3(0.1);
+      
+      // Lumière directionnelle principale (simule la directionalLight de la scène)
+      vec3 lightDir = normalize(vec3(0.0, 0.0, 1.0));
+      float diff = max(dot(worldNormal, lightDir), 0.0);
+      lighting += vec3(1.5) * diff;
+      
+      // Point lights (simule les lumières de la scène)
+      vec3 pointLight1Pos = vec3(3.0, 3.0, 2.0);
+      vec3 pointLight1Dir = normalize(pointLight1Pos - worldPos);
+      float pointLight1Dist = length(pointLight1Pos - worldPos);
+      float pointLight1Att = 1.0 / (1.0 + 0.1 * pointLight1Dist + 0.01 * pointLight1Dist * pointLight1Dist);
+      float pointLight1Diff = max(dot(worldNormal, pointLight1Dir), 0.0);
+      lighting += vec3(1.0, 1.0, 1.0) * 2.0 * pointLight1Diff * pointLight1Att;
+      
+      vec3 pointLight2Pos = vec3(-3.0, -3.0, 2.0);
+      vec3 pointLight2Dir = normalize(pointLight2Pos - worldPos);
+      float pointLight2Dist = length(pointLight2Pos - worldPos);
+      float pointLight2Att = 1.0 / (1.0 + 0.1 * pointLight2Dist + 0.01 * pointLight2Dist * pointLight2Dist);
+      float pointLight2Diff = max(dot(worldNormal, pointLight2Dir), 0.0);
+      lighting += vec3(1.0, 1.0, 1.0) * 2.0 * pointLight2Diff * pointLight2Att;
+      
+      return lighting;
+    }
     
     void main() {
       // Calcul des coordonnées écran normalisées
       vec2 screenUV = (vScreenPosition.xy / vScreenPosition.w) * 0.5 + 0.5;
-      screenUV.y = 1.0 - screenUV.y; // Inverser Y pour correspondre aux coordonnées DOM
+      screenUV.y = 1.0 - screenUV.y;
       
-      vec3 finalColor = color;
-      vec3 finalEmissive = emissive;
-      float finalEmissiveIntensity = emissiveIntensity;
+             vec3 normal = normalize(vNormal);
+       vec3 worldNormal = normalize(vWorldNormal);
+       vec3 viewDir = normalize(-vPosition);
+       
+       // Calculer l'éclairage de la scène
+       vec3 lighting = calculateLighting(vWorldPosition, worldNormal);
+       
+       // Calcul de l'effet de contour plus net et droit
+       float fresnel = 1.0 - abs(dot(normal, viewDir));
+       float edgeIntensity = pow(fresnel, 4.0); // Plus de puissance pour des bords plus nets
+       
+       // Couleur de base pour l'effet wireframe
+       vec3 wireframeColor = vec3(0.8, 0.9, 1.0); // Blanc légèrement bleuté
+       float baseIntensity = 0.4;
+      
+      // Effet de hover avec couleurs spécifiques
+      vec3 finalWireframeColor = wireframeColor;
+      float finalIntensity = baseIntensity;
       
       if (isHovered) {
-        // Vérifier si le fragment est dans les bounds de la case survolée
         bool inBounds = screenUV.x >= hoveredBounds.x && 
                        screenUV.x <= hoveredBounds.x + hoveredBounds.z &&
                        screenUV.y >= hoveredBounds.y && 
                        screenUV.y <= hoveredBounds.y + hoveredBounds.w;
         
         if (inBounds) {
-          // Calculer la distance de la position de la souris
           float distFromMouse = length(screenUV - mousePosition);
           
-          // Appliquer l'effet dans un rayon autour de la souris
           if (distFromMouse < hoverRadius) {
-            // Créer un dégradé doux vers les bords
             float intensity = 1.0 - smoothstep(0.0, hoverRadius, distFromMouse);
             
-            // Appliquer la couleur spécifique à la case avec intensité variable
-            finalColor = mix(color, hoverColor, intensity * 0.8);
-            finalEmissive = mix(emissive, hoverColor, intensity);
-            finalEmissiveIntensity = mix(emissiveIntensity, emissionBoost, intensity * 0.7);
+            // Mélanger avec la couleur de la carte
+            finalWireframeColor = mix(wireframeColor, hoverColor.rgb, intensity * 0.7);
+            finalIntensity = mix(baseIntensity, emissionBoost, intensity * 0.8);
           }
         }
       }
       
-      // Simuler un matériau physique avec effet métallique variable
-      vec3 normal = normalize(vNormal);
-      float fresnel = pow(1.0 - dot(normal, vec3(0.0, 0.0, 1.0)), 2.0);
-      
-      // Ajouter des reflets selon la couleur
-      vec3 result = finalColor + finalEmissive * finalEmissiveIntensity;
-      result = mix(result, finalColor * (1.2 + emissionBoost * 0.3), fresnel * 0.3);
-      
-      gl_FragColor = vec4(result, opacity + transmission * 0.1);
+             // Créer l'effet wireframe unifié
+       vec3 result = vec3(0.0); // Fond noir
+       
+       // Un seul rendu de contour pour éviter le dédoublement
+       if (edgeIntensity > 0.05) {
+         float edgeOpacity = smoothstep(0.05, 0.6, edgeIntensity);
+         // Appliquer l'éclairage aux contours
+         result = finalWireframeColor * finalIntensity * edgeOpacity * lighting;
+       }
+       
+       // Transparence basée uniquement sur la présence des contours
+       float alpha = edgeIntensity > 0.05 ? 1.0 : 0.0;
+       
+       gl_FragColor = vec4(result, alpha);
     }
   `
 );
@@ -272,7 +324,7 @@ export function BmsModel(props: ModelProps) {
           ref={materialRef}
           object={new SimpleColorMaterial()}
           transparent={true}
-          side={THREE.DoubleSide}
+          side={THREE.FrontSide}
       />
       </mesh>
     </group>

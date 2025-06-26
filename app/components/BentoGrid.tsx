@@ -81,38 +81,80 @@ const BentoGrid = () => {
         onClick={() => handleCardClickEvent(cardId)}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-        <div className={`relative z-10 h-full flex flex-col justify-center items-center text-white transition-all duration-500 ${expandedCard === cardId ? (cardId === 'main' ? 'p-16' : 'p-12') : (cardId === 'main' ? 'p-8' : 'p-6')}`}>
-          
-          {/* Titres normaux */}
-          {cardId === 'main' ? (
-            <>
-              <h3 className={`font-bold mb-6 text-center transition-all duration-500 ${expandedCard === cardId ? 'text-7xl' : 'text-4xl'}`}>
-                {cardData.title}
-              </h3>
-              <h3 className={`font-bold mb-4 text-center transition-all duration-500 ${expandedCard === cardId ? 'text-7xl' : 'text-4xl'}`}>
-                {cardData.subtitle}
-              </h3>
-              <p className={`text-center opacity-90 font-semibold transition-all duration-500 ${expandedCard === cardId ? 'text-2xl mb-16' : 'text-xl'}`}>
-                {cardData.description}
-              </p>
-            </>
-          ) : (
-            <>
-              <h4 className={`font-bold mb-3 transition-all duration-500 ${expandedCard === cardId ? 'text-6xl mb-8' : 'text-2xl'}`}>
-                {cardData.title}
-              </h4>
-              <p className={`text-center opacity-90 font-medium transition-all duration-500 ${expandedCard === cardId ? 'text-xl mb-12' : 'text-base'}`}>
-                {cardData.subtitle}
-              </p>
-            </>
-          )}
+        
+        {/* Contenu pour cartes étendues */}
+        {expandedCard === cardId ? (
+          <div className={`relative z-10 h-full flex flex-col justify-center items-center text-white transition-all duration-500 ${cardId === 'main' ? 'p-16' : 'p-12'}`}>
+            {/* Titres pour cartes étendues */}
+            {cardId === 'main' ? (
+              <>
+                <h3 className="font-bold mb-6 text-center transition-all duration-500 text-7xl">
+                  {cardData.title}
+                </h3>
+                <h3 className="font-bold mb-4 text-center transition-all duration-500 text-7xl">
+                  {cardData.subtitle}
+                </h3>
+                <p className="text-center opacity-90 font-semibold transition-all duration-500 text-2xl mb-16">
+                  {cardData.description}
+                </p>
+              </>
+            ) : (
+              <>
+                <h4 className="font-bold mb-3 transition-all duration-500 text-6xl mb-8">
+                  {cardData.title}
+                </h4>
+                <p className="text-center opacity-90 font-medium transition-all duration-500 text-xl mb-12">
+                  {cardData.subtitle}
+                </p>
+              </>
+            )}
 
-          {/* Contenu étendu */}
-          <ExpandedCardContent 
-            cardId={cardId}
-            isExpanded={expandedCard === cardId}
-          />
-        </div>
+            {/* Contenu étendu */}
+            <ExpandedCardContent 
+              cardId={cardId}
+              isExpanded={expandedCard === cardId}
+            />
+          </div>
+        ) : (
+          /* Contenu pour cartes normales - Style Figma */
+          <div className="relative z-10 h-full flex flex-col justify-end p-6">
+            <div className="text-white">
+              {/* Texte principal en bas à gauche */}
+              {cardId === 'main' ? (
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold mb-2 leading-tight">
+                    {cardData.title}<br />
+                    {cardData.subtitle}
+                  </h2>
+                  <p className="text-sm opacity-80 font-medium uppercase tracking-wider">
+                    {cardData.description}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <h3 className="text-xl md:text-2xl font-bold mb-2 leading-tight">
+                    {cardData.title}
+                  </h3>
+                  <p className="text-xs opacity-80 font-medium uppercase tracking-wider">
+                    {cardData.subtitle}
+                  </p>
+                </div>
+              )}
+              
+              {/* Badge "SERVICES & PRIX" style */}
+              <div className="flex items-center justify-between mt-4">
+                <span className="text-xs opacity-60 uppercase tracking-wider font-medium">
+                  SERVICES & PRIX
+                </span>
+                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Effet de brillance */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 group-hover:translate-x-full transition-transform duration-1000" />
